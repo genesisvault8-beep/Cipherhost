@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What you actually shipped — a guide for vibe coders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0E0F12;
+    --ink-raised: #15171B;
+    --bone: #E8E3D8;
+    --bone-dim: #B8B2A4;
+    --slate: #5A6470;
+    --amber: #D98E3D;
+    --amber-dim: #8A5E2C;
+    --line: #2A2D33;
+    --green: #82B583;
+    --red: #C97D70;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--bone);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  ::selection { background: var(--amber); color: var(--ink); }
+  a { color: var(--amber); }
+
+  .wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    border-bottom: 1px solid var(--line);
+    padding: 18px 0;
+    position: sticky;
+    top: 0;
+    background: rgba(14,15,18,0.92);
+    backdrop-filter: blur(6px);
+    z-index: 10;
+  }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
+  .brand .dot { color: var(--amber); }
+  .topbar .meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 56px 0 36px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(26px, 5vw, 36px);
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+  }
+  .hero .lede { font-size: 16px; color: var(--bone-dim); max-width: 56ch; }
+  .hero .lede strong { color: var(--bone); }
+
+  /* ---------- TOC ---------- */
+  .toc {
+    background: var(--ink-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-top: 28px;
+  }
+  .toc-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc li { counter-increment: toc; padding: 4px 0; font-size: 14px; }
+  .toc li a { text-decoration: none; color: var(--bone-dim); }
+  .toc li a:hover { color: var(--amber); }
+  .toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--amber-dim);
+    font-size: 12px;
+    margin-right: 10px;
+  }
+
+  /* ---------- Sections ---------- */
+  section { padding: 48px 0; border-bottom: 1px solid var(--line); }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  h2 { font-size: 24px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.005em; }
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: var(--bone); }
+  p { font-size: 15px; color: var(--bone-dim); margin-bottom: 14px; }
+  p strong { color: var(--bone); font-weight: 600; }
+  p.lead { font-size: 16px; color: var(--bone); margin-bottom: 20px; }
+
+  ul.plain, ol.plain { margin: 12px 0 18px 0; padding-left: 0; list-style: none; }
+  ul.plain li, ol.plain li {
+    font-size: 15px;
+    color: var(--bone-dim);
+    padding: 8px 0 8px 22px;
+    border-top: 1px solid var(--line);
+    position: relative;
+  }
+  ul.plain li:first-child, ol.plain li:first-child { border-top: none; padding-top: 0; }
+  ul.plain li::before {
+    content: '→';
+    color: var(--amber);
+    position: absolute;
+    left: 0;
+  }
+  ul.plain li strong { color: var(--bone); }
+
+  /* ---------- Analogy box ---------- */
+  .analogy {
+    background: var(--ink-raised);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 6px 6px 0;
+    padding: 16px 20px;
+    margin: 20px 0;
+  }
+  .analogy .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .analogy p { color: var(--bone-dim); margin: 0; font-size: 14px; }
+
+  /* ---------- Comparison rows (before/after) ---------- */
+  .compare {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .compare-row {
+    display: flex;
+    border-top: 1px solid var(--line);
+  }
+  .compare-row:first-child { border-top: none; }
+  .compare-cell {
+    flex: 1;
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+  .compare-cell.label {
+    flex: 0 0 110px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--slate);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+  }
+  .compare-cell.without { color: var(--red); border-right: 1px solid var(--line); }
+  .compare-cell.with { color: var(--green); }
+
+  /* ---------- Checklist / steps ---------- */
+  .checklist { margin: 18px 0; }
+  .check-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+  }
+  .check-item:first-child { border-top: none; padding-top: 0; }
+  .check-mark {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--amber-dim);
+    flex-shrink: 0;
+    width: 20px;
+    font-size: 13px;
+  }
+  .check-item p { margin: 0; font-size: 14px; color: var(--bone-dim); }
+  .check-item strong { color: var(--bone); }
+
+  /* ---------- Pricing cards ---------- */
+  .service-grid { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
+  .service-card {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .service-card .name { font-size: 14px; font-weight: 600; color: var(--bone); margin-bottom: 4px; }
+  .service-card .desc { font-size: 13px; color: var(--slate); }
+  .service-card .price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--amber);
+    flex-shrink: 0;
+    white-space: nowrap;
+    text-align: right;
+  }
+  .service-card .price .alt {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--slate);
+    margin-top: 2px;
+  }
+  .service-card.bundle { border-color: var(--amber-dim); background: rgba(217,142,61,0.04); }
+  .service-card.bundle .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  /* ---------- CTA paths ---------- */
+  .path-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 24px 0; }
+  .path-card {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 20px;
+  }
+  .path-card.primary { border-color: var(--amber-dim); background: rgba(217,142,61,0.04); }
+  .path-card .icon { font-family: 'JetBrains Mono', monospace; color: var(--amber); font-size: 20px; margin-bottom: 10px; }
+  .path-card h3 { margin: 0 0 8px 0; font-size: 15px; }
+  .path-card p { font-size: 13px; margin-bottom: 16px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .btn-primary { background: var(--amber); color: var(--ink); }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--bone-dim); }
+  .btn-ghost:hover { border-color: var(--slate); color: var(--bone); }
+
+  /* ---------- Footer ---------- */
+  footer { padding: 32px 0 48px; text-align: center; }
+  footer p { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 560px) {
+    .compare-row { flex-direction: column; }
+    .compare-cell.without { border-right: none; border-bottom: 1px solid var(--line); }
+    .compare-cell.label { flex: none; }
+    .path-grid { grid-template-columns: 1fr; }
+    .service-card { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  input:focus-visible, a:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">cipher<span class="dot">·</span>host</div>
+      <div class="meta">guide // for builders</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="eyebrow">a plain-language guide</div>
+      <h1>You shipped a site. Here's what you actually shipped.</h1>
+      <p class="lede">If you built your site with AI — Claude, ChatGPT, Lovable, whatever — there's a good chance it <strong>works</strong> but you don't fully know <strong>why</strong>, or what's still missing. This guide explains three things in plain terms: your domain (DNS), turning your site into an installable app (PWA), and getting found on Google (Search Console). No jargon left unexplained.</p>
+
+      <div class="toc">
+        <div class="toc-label">In this guide</div>
+        <ol>
+          <li><a href="#dns">What DNS actually is, and why your domain "doesn't work" sometimes</a></li>
+          <li><a href="#pwa">Turning your website into a real, installable app</a></li>
+          <li><a href="#console">Why Google can't find your site (and how to fix that)</a></li>
+          <li><a href="#help">Do it yourself, or have it done for you</a></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <section id="dns">
+    <div class="wrap">
+      <div class="section-label">part one</div>
+      <h2>What DNS actually is</h2>
+      <p class="lead">You bought a domain. Maybe it's pointing somewhere. Maybe it isn't. Maybe it half-works. Here's what's actually going on.</p>
+
+      <div class="analogy">
+        <div class="tag">Think of it like this</div>
+        <p>Every website lives on a server with a numeric address, like <span class="mono">192.0.2.1</span>. Nobody wants to remember that. DNS is the phonebook of the internet — it's the system that takes a name you can remember (<span class="mono">yourname.com</span>) and quietly translates it into the numeric address your browser actually needs to find the right server.</p>
+      </div>
+
+      <p>When people say "my domain isn't working" or "my site shows an error," 9 times out of 10 it's because the phonebook entry — the DNS record — is missing, wrong, or hasn't finished updating yet.</p>
+
+      <h3>The three records that matter most</h3>
+      <ul class="plain">
+        <li><strong>A record</strong> — points your domain straight at a server's numeric address. The most direct kind of record.</li>
+        <li><strong>CNAME record</strong> — points your domain (or a subdomain like <span class="mono">www</span>) at another domain name instead of a number. This is what most modern hosts (Vercel, Netlify, GitHub Pages) ask you to set up.</li>
+        <li><strong>TXT record</strong> — doesn't point anywhere. It's used to prove you own the domain — Google Search Console, email providers, and SSL certificates all use this to verify it's really you.</li>
+      </ul>
+
+      <h3>Why it sometimes "doesn't work" right after you set it up</h3>
+      <p>DNS changes aren't instant. When you update a record, that change has to spread across servers worldwide — this is called <strong>propagation</strong>, and it can take anywhere from a few minutes to 48 hours. If your site looks broken right after you touch DNS settings, the honest first move is usually: wait, then check again.</p>
+
+      <div class="analogy">
+        <div class="tag">Common beginner trap</div>
+        <p>Buying a domain from one company (like Namecheap) and hosting your site with another (like Vercel) doesn't connect automatically. You have to manually go into your domain's DNS settings and add the record your host tells you to add. This single missing step is the #1 reason a finished site doesn't show up at its domain.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pwa">
+    <div class="wrap">
+      <div class="section-label">part two</div>
+      <h2>Turning your site into an installable app</h2>
+      <p class="lead">Right now, your site is something people visit. A PWA is something people can <strong>install</strong> — it sits on their home screen like a real app, can work offline, and feels less like "a website" and more like a product.</p>
+
+      <div class="compare">
+        <div class="compare-row">
+          <div class="compare-cell label">Open it</div>
+          <div class="compare-cell without">Type the URL or find it in a bookmark every time</div>
+          <div class="compare-cell with">Tap an icon on the home screen, like any other app</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-cell label">Offline</div>
+          <div class="compare-cell without">Blank page or browser error with no connection</div>
+          <div class="compare-cell with">Can still load and show content with no connection</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-cell label">Feel</div>
+          <div class="compare-cell without">Browser bar, tabs, "just a website"</div>
+          <div class="compare-cell with">Full-screen, no browser chrome, feels native</div>
+        </div>
+      </div>
+
+      <h3>What actually has to be added</h3>
+      <p>A PWA isn't a different kind of website — it's your existing website plus three small additions:</p>
+      <ul class="plain">
+        <li><strong>A manifest file</strong> — a small text file that tells the phone your app's name, icon, and colors so it knows how to display it once installed.</li>
+        <li><strong>Icons</strong> — your logo or icon, exported in the specific sizes phones expect (this trips up a lot of people — wrong size, wrong format, and the install option just never shows up).</li>
+        <li><strong>A service worker</strong> — a small script that runs quietly in the background, letting the browser cache parts of your site so it can still load when offline or on a bad connection.</li>
+      </ul>
+
+      <div class="analogy">
+        <div class="tag">Why vibe coders get stuck here</div>
+        <p>None of these three things break your site if they're missing — your site still loads fine in a browser. That's exactly why it's easy to ship something that "works" but was never actually installable, and never notice, because nothing visibly tells you it's missing.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="console">
+    <div class="wrap">
+      <div class="section-label">part three</div>
+      <h2>Why Google can't find your site yet</h2>
+      <p class="lead">A live site is not the same as a <strong>findable</strong> site. Google doesn't automatically know your site exists — you have to tell it, and then prove you're the owner.</p>
+
+      <h3>What Google Search Console actually does</h3>
+      <ul class="plain">
+        <li><strong>Verifies ownership</strong> — usually via that TXT record from part one, or an HTML file upload, proving the site is really yours before Google trusts data from it.</li>
+        <li><strong>Accepts your sitemap</strong> — a simple file listing every page on your site, so Google can find and crawl all of them instead of guessing.</li>
+        <li><strong>Tells you what's broken</strong> — pages that failed to load properly, mobile usability issues, pages that got removed from search results and why.</li>
+      </ul>
+
+      <div class="checklist">
+        <div class="check-item">
+          <span class="check-mark mono">01</span>
+          <p><strong>Verify your domain</strong> in Search Console using a TXT record or file upload.</p>
+        </div>
+        <div class="check-item">
+          <span class="check-mark mono">02</span>
+          <p><strong>Submit a sitemap</strong> so Google knows every page that exists, not just the homepage.</p>
+        </div>
+        <div class="check-item">
+          <span class="check-mark mono">03</span>
+          <p><strong>Request indexing</strong> on key pages so they don't sit in a crawl queue for weeks.</p>
+        </div>
+      </div>
+
+      <div class="analogy">
+        <div class="tag">Reality check</div>
+        <p>A site can be live, fast, and beautiful — and still be functionally invisible to anyone searching Google, because nobody ever told Google it exists. This step is invisible work with a very visible payoff.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="help">
+    <div class="wrap">
+      <div class="section-label">part four</div>
+      <h2>Do it yourself, or have it done for you</h2>
+      <p class="lead">Everything above is genuinely doable on your own with patience and some searching. If you'd rather not spend a weekend in documentation, here's what it costs to have it handled directly.</p>
+
+      <div class="service-grid">
+        <div class="service-card">
+          <div>
+            <div class="name">DNS setup</div>
+            <div class="desc">Domain connected properly to your host, verified working</div>
+          </div>
+          <div class="price">₦6,000<span class="alt">GH₵100 · $4 USDT</span></div>
+        </div>
+        <div class="service-card">
+          <div>
+            <div class="name">PWA conversion</div>
+            <div class="desc">Manifest, icons, service worker — installable on any device</div>
+          </div>
+          <div class="price">₦10,000<span class="alt">GH₵165 · $7 USDT</span></div>
+        </div>
+        <div class="service-card">
+          <div>
+            <div class="name">Search Console setup</div>
+            <div class="desc">Domain verified, sitemap submitted, indexing requested</div>
+          </div>
+          <div class="price">₦7,000<span class="alt">GH₵115 · $5 USDT</span></div>
+        </div>
+        <div class="service-card bundle">
+          <span class="badge">all three</span>
+          <div>
+            <div class="name">Complete setup</div>
+            <div class="desc">DNS + PWA + Search Console, done together</div>
+          </div>
+          <div class="price">₦20,000<span class="alt">GH₵330 · $15 USDT</span></div>
+        </div>
+      </div>
+
+      <div class="path-grid">
+        <div class="path-card primary">
+          <div class="icon mono">→</div>
+          <h3>Have it done for you</h3>
+          <p>Send your site and what you need. It gets handled directly, no back and forth required.</p>
+          <a href="#" class="btn btn-primary" id="waLink">Message on WhatsApp</a>
+        </div>
+        <div class="path-card">
+          <div class="icon mono">↓</div>
+          <h3>Do it yourself</h3>
+          <p>Everything above is enough to get started. Search the specific terms in bold for step-by-step instructions matched to your host.</p>
+          <a href="#dns" class="btn btn-ghost">Back to the top</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <p>Need a subdomain too? <a href="https://cipherhost.xyz" id="chLink">cipherhost.xyz</a> — handles from ₦1,500/mo.</p>
+      <p>cipherhost.xyz — a Genesis Group property</p>
+    </div>
+  </footer>
+
+  <script>
+    // Set this to the actual WhatsApp number, e.g. https://wa.me/2348012345678
+    const WHATSAPP_LINK = 'https://wa.me/23273895983';
+    document.getElementById('waLink').href = WHATSAPP_LINK;
+  </script>
+
+</body>
+</html>
