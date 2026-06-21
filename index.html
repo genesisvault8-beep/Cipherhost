@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cipher Host — Claim your subdomain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0E0F12;
+    --ink-raised: #15171B;
+    --bone: #E8E3D8;
+    --bone-dim: #B8B2A4;
+    --slate: #5A6470;
+    --amber: #D98E3D;
+    --amber-dim: #8A5E2C;
+    --line: #2A2D33;
+    --green: #5E8C61;
+    --red: #A3554A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--bone);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(circle, rgba(217,142,61,0.10) 0%, rgba(217,142,61,0) 70%);
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 0;
+    animation: driftGlow 14s ease-in-out infinite;
+  }
+
+  @keyframes driftGlow {
+    0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+    50% { transform: translateX(-46%) translateY(40px) scale(1.08); }
+  }
+
+  .wrap { position: relative; z-index: 1; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  ::selection { background: var(--amber); color: var(--ink); }
+
+  a { color: inherit; }
+
+  /* ---------- Layout shell ---------- */
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    border-bottom: 1px solid var(--line);
+    padding: 20px 0;
+  }
+  .topbar .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+  .brand .dot { color: var(--amber); }
+  .topbar .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--slate);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulseDot 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(217,142,61,0.5); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(217,142,61,0); }
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin-bottom: 18px;
+    max-width: 13ch;
+  }
+  .hero p.lede {
+    font-size: 16px;
+    color: var(--bone-dim);
+    max-width: 48ch;
+    margin-bottom: 36px;
+  }
+
+  /* ---------- Terminal lookup (signature element) ---------- */
+  .terminal {
+    background: var(--ink-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .terminal-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--slate);
+  }
+  .terminal-head .dots { display: flex; gap: 6px; margin-right: 6px; }
+  .terminal-head .dots span {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--line);
+  }
+  .terminal-body { padding: 18px 16px 22px; }
+  .query-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+  }
+  .prompt-symbol { color: var(--amber); flex-shrink: 0; }
+  .query-row input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--bone);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    min-width: 0;
+  }
+  .query-row input::placeholder { color: var(--slate); }
+  .domain-suffix {
+    color: var(--slate);
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .result-line {
+    margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    min-height: 20px;
+  }
+  .result-line .tag {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .tag.taken { background: rgba(163,85,74,0.18); color: #C97D70; }
+  .tag.available { background: rgba(94,140,97,0.18); color: #82B583; }
+
+  .hero-cta {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 11px 18px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+    cursor: pointer;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: var(--amber);
+    color: var(--ink);
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--bone-dim);
+  }
+  .btn-ghost:hover { border-color: var(--slate); color: var(--bone); }
+
+  /* ---------- Sections ---------- */
+  section {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: -0.005em;
+  }
+  .section-intro {
+    color: var(--bone-dim);
+    max-width: 56ch;
+    margin-bottom: 28px;
+    font-size: 15px;
+  }
+
+  /* ---------- How it works ---------- */
+  .steps {
+    display: flex;
+    flex-direction: column;
+  }
+  .step {
+    display: flex;
+    gap: 18px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+  }
+  .step:first-child { border-top: none; padding-top: 0; }
+  .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--amber-dim);
+    font-size: 13px;
+    flex-shrink: 0;
+    width: 24px;
+    padding-top: 2px;
+  }
+  .step-body h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .step-body p {
+    font-size: 14px;
+    color: var(--bone-dim);
+  }
+
+  /* ---------- Zone file (taken/available list) ---------- */
+  .live-feed {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--bone-dim);
+    background: var(--ink-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+    animation: livePulse 1.4s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(94,140,97,0.5); }
+    50% { opacity: 0.5; box-shadow: 0 0 0 5px rgba(94,140,97,0); }
+  }
+  .live-feed .text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .live-feed .text .handle { color: var(--amber); }
+  .live-feed .text.fade-out { animation: feedFade 0.25s ease forwards; }
+  .live-feed .text.fade-in { animation: feedFadeIn 0.3s ease forwards; }
+  @keyframes feedFade { to { opacity: 0; transform: translateY(-4px); } }
+  @keyframes feedFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .zone-row.just-claimed {
+    animation: rowFlash 1.6s ease;
+  }
+  @keyframes rowFlash {
+    0% { background: rgba(217,142,61,0.16); }
+    100% { background: transparent; }
+  }
+
+  .zonefile {
+    background: var(--ink-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    overflow-x: auto;
+  }
+  .zonefile-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    color: var(--slate);
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .zone-row {
+    display: flex;
+    align-items: center;
+    padding: 9px 16px;
+    border-top: 1px solid var(--line);
+    gap: 12px;
+  }
+  .zone-row:first-of-type { border-top: none; }
+  .zone-handle { color: var(--bone); width: 180px; flex-shrink: 0; }
+  .zone-handle .suffix { color: var(--slate); }
+  .zone-status { width: 90px; flex-shrink: 0; font-size: 12px; }
+  .zone-status.taken { color: #C97D70; }
+  .zone-status.available { color: #82B583; }
+  .zone-note { color: var(--slate); font-size: 12px; }
+  .zonefile-foot {
+    padding: 10px 16px;
+    border-top: 1px solid var(--line);
+    color: var(--slate);
+    font-size: 11px;
+  }
+
+  /* ---------- Pricing ---------- */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .price-card {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 20px;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .price-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--amber-dim);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .price-card.featured {
+    border-color: var(--amber-dim);
+    background: rgba(217,142,61,0.04);
+  }
+  .price-card .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .price-card .amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .price-card .amount-alt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--bone-dim);
+    margin-top: 4px;
+  }
+  .price-card .amount-alt .unit { color: var(--slate); }
+  .price-card .price-cta { margin-top: 18px; width: 100%; justify-content: center; }
+  .price-card .amount .unit {
+    font-size: 13px;
+    color: var(--slate);
+    font-weight: 400;
+  }
+  .price-card .save {
+    font-size: 12px;
+    color: #82B583;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 14px;
+  }
+  .price-card .spacer { margin-bottom: 18px; }
+  .price-card ul {
+    list-style: none;
+    font-size: 13px;
+    color: var(--bone-dim);
+  }
+  .price-card li {
+    padding: 5px 0;
+    display: flex;
+    gap: 8px;
+  }
+  .price-card li::before {
+    content: '·';
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  /* ---------- Referral ---------- */
+  .referral-box {
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 22px 20px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .referral-box .icon {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--amber);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .referral-box p { font-size: 14px; color: var(--bone-dim); }
+  .referral-box strong { color: var(--bone); }
+
+  /* ---------- Rules ---------- */
+  .rules p {
+    font-size: 13px;
+    color: var(--slate);
+    max-width: 60ch;
+  }
+
+  /* ---------- Footer / final CTA ---------- */
+  .final-cta {
+    padding: 56px 0 64px;
+    text-align: center;
+    border-bottom: none;
+  }
+  .final-cta h2 { font-size: 24px; margin-bottom: 10px; }
+  .final-cta p { color: var(--bone-dim); margin-bottom: 26px; font-size: 15px; }
+
+  footer {
+    padding: 28px 0 40px;
+    text-align: center;
+  }
+  footer p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--slate);
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 560px) {
+    .pricing-grid { grid-template-columns: 1fr; }
+    .zone-handle { width: 130px; }
+    .referral-box { flex-direction: column; align-items: flex-start; }
+    h1 { max-width: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+
+  /* Focus visibility */
+  input:focus-visible,
+  .btn:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Boot sequence ---------- */
+  .boot-line {
+    color: var(--slate);
+    font-size: 13px;
+    min-height: 18px;
+    opacity: 0;
+  }
+  .boot-line.show { opacity: 1; }
+  .boot-line .ok { color: #82B583; }
+  .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 14px;
+    background: var(--amber);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  .cursor.hidden { display: none; }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    50.01%, 100% { opacity: 0; }
+  }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ---------- Zone row hover ---------- */
+  .zone-row {
+    transition: background 0.15s ease, padding-left 0.15s ease;
+  }
+  .zone-row:hover {
+    background: rgba(217,142,61,0.05);
+    padding-left: 20px;
+  }
+
+  /* ---------- Hero entrance ---------- */
+  .hero .eyebrow,
+  .hero h1,
+  .hero p.lede {
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+  .hero .eyebrow { animation-delay: 0.05s; }
+  .hero h1 { animation-delay: 0.15s; }
+  .hero p.lede { animation-delay: 0.28s; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+    .hero .eyebrow, .hero h1, .hero p.lede { animation: none; opacity: 1; }
+    .cursor { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">cipher<span class="dot">·</span>host</div>
+      <div class="meta">NG // v1</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="eyebrow">subdomain identity for builders</div>
+      <h1>Your handle. Your subdomain. Live in minutes.</h1>
+      <p class="lede">Claim <span class="mono">yourname.cipherhost.xyz</span> and point it at whatever you've already built — your tools, your profile, your work. Pay in naira. No card required.</p>
+
+      <div class="terminal">
+        <div class="terminal-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          lookup.sh
+        </div>
+        <div class="terminal-body">
+          <div class="boot-line mono" id="bootLine1"></div>
+          <div class="boot-line mono" id="bootLine2"></div>
+          <div class="query-row" id="queryRow" style="opacity:0">
+            <span class="prompt-symbol">$</span>
+            <input type="text" id="handleInput" placeholder="yourname" autocomplete="off" spellcheck="false">
+            <span class="domain-suffix">.cipherhost.xyz</span>
+            <span class="cursor" id="staticCursor"></span>
+          </div>
+          <div class="result-line" id="resultLine"></div>
+        </div>
+      </div>
+
+      <div class="hero-cta">
+        <a href="#" class="btn btn-primary" id="waLink">Message on WhatsApp →</a>
+        <a href="#how" class="btn btn-ghost">How it works</a>
+      </div>
+    </div>
+  </div>
+
+  <section id="how" class="reveal">
+    <div class="wrap">
+      <div class="section-label">process</div>
+      <h2>How it works</h2>
+      <p class="section-intro">No dashboard yet. No signup form. Just a handle, a destination, and a payment.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num mono">01</div>
+          <div class="step-body">
+            <h3>Pick a handle</h3>
+            <p>Check it above. If it's free, it's yours to claim.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num mono">02</div>
+          <div class="step-body">
+            <h3>Message on WhatsApp</h3>
+            <p>Send your handle and the URL you want it pointing to — GitHub Pages, Vercel, wherever it already lives.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num mono">03</div>
+          <div class="step-body">
+            <h3>Pay via Paystack or Flutterwave</h3>
+            <p>Naira, no card needed. Bank transfer or USSD both work.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num mono">04</div>
+          <div class="step-body">
+            <h3>Go live</h3>
+            <p>Your subdomain resolves to your destination. Usually same day.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="zone" class="reveal">
+    <div class="wrap">
+      <div class="section-label">registry</div>
+      <h2>What's already claimed</h2>
+      <p class="section-intro">A snapshot, updated by hand — not a live system yet. If your handle isn't listed below, it's worth asking about.</p>
+
+      <div class="live-feed">
+        <span class="live-dot"></span>
+        <span class="text" id="liveFeedText">watching for new claims…</span>
+      </div>
+
+      <div class="zonefile" id="zonefileList">
+        <div class="zonefile-head">
+          <span>handle</span>
+          <span>status</span>
+        </div>
+        <div class="zone-row">
+          <span class="zone-handle">ai<span class="suffix">.cipherhost.xyz</span></span>
+          <span class="zone-status taken">taken</span>
+          <span class="zone-note">reserved</span>
+        </div>
+        <div class="zone-row">
+          <span class="zone-handle">genesis<span class="suffix">.cipherhost.xyz</span></span>
+          <span class="zone-status taken">taken</span>
+          <span class="zone-note">reserved</span>
+        </div>
+        <div class="zone-row">
+          <span class="zone-handle">cipher<span class="suffix">.cipherhost.xyz</span></span>
+          <span class="zone-status taken">taken</span>
+          <span class="zone-note">reserved</span>
+        </div>
+        <div class="zone-row">
+          <span class="zone-handle">vault<span class="suffix">.cipherhost.xyz</span></span>
+          <span class="zone-status taken">taken</span>
+          <span class="zone-note">reserved</span>
+        </div>
+        <div class="zone-row">
+          <span class="zone-handle">index<span class="suffix">.cipherhost.xyz</span></span>
+          <span class="zone-status taken">taken</span>
+          <span class="zone-note">reserved</span>
+        </div>
+        <div class="zonefile-foot">last updated manually · everything else: ask</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing" class="reveal">
+    <div class="wrap">
+      <div class="section-label">pricing</div>
+      <h2>One price. Every handle.</h2>
+      <p class="section-intro">No tiers yet. No premium handles. Just a flat rate while this is new.</p>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="badge">Monthly</div>
+          <div class="amount">₦1,500 <span class="unit">/ mo</span></div>
+          <div class="amount-alt">GH₵25 <span class="unit">/ mo</span> · $1 <span class="unit">USDT / mo</span></div>
+          <div class="spacer"></div>
+          <ul>
+            <li>One subdomain</li>
+            <li>Points to any URL you control</li>
+            <li>Cancel anytime</li>
+          </ul>
+          <a href="#" class="btn btn-primary price-cta">Chat on WhatsApp →</a>
+        </div>
+        <div class="price-card featured">
+          <div class="badge">Annual</div>
+          <div class="amount">₦12,000 <span class="unit">/ yr</span></div>
+          <div class="amount-alt">GH₵240 <span class="unit">/ yr</span> · $10 <span class="unit">USDT / yr</span></div>
+          <div class="save">save ₦6,000 vs monthly</div>
+          <ul>
+            <li>One subdomain</li>
+            <li>Points to any URL you control</li>
+            <li>Locked in for 12 months</li>
+          </ul>
+          <a href="#" class="btn btn-primary price-cta">Chat on WhatsApp →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="referral" class="reveal">
+    <div class="wrap">
+      <div class="section-label">referral</div>
+      <h2>Bring a friend, both get paid in time</h2>
+      <div class="referral-box">
+        <div class="icon mono">→</div>
+        <p><strong>Refer someone who subscribes — you both get a free month added.</strong> Just tell them to mention your handle when they message in. Tracked by hand for now, no caps.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="rules" class="rules reveal">
+    <div class="wrap">
+      <div class="section-label">ground rules</div>
+      <h2>One thing not allowed</h2>
+      <p>Handles used for phishing or spamming will be taken down without a refund. That's the only hard rule right now. Use it for what you actually do.</p>
+    </div>
+  </section>
+
+  <div class="final-cta reveal">
+    <div class="wrap">
+      <h2>Your handle is sitting there.</h2>
+      <p>Go claim it before someone else does.</p>
+      <a href="#" class="btn btn-primary" id="waLink2">Message on WhatsApp →</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <p>cipherhost.xyz — a Genesis Group property</p>
+    </div>
+  </footer>
+
+  <script>
+    // Pre-claimed / reserved handles — update this list by hand as new ones are sold
+    const takenHandles = new Set(['ai', 'genesis', 'cipher', 'vault', 'index']);
+
+    // Set this to the actual WhatsApp number, e.g. https://wa.me/2348012345678
+    const WHATSAPP_LINK = 'https://wa.me/23273895983';
+    document.getElementById('waLink').href = WHATSAPP_LINK;
+    document.getElementById('waLink2').href = WHATSAPP_LINK;
+    document.querySelectorAll('.price-cta').forEach(el => el.href = WHATSAPP_LINK);
+
+    const input = document.getElementById('handleInput');
+    const resultLine = document.getElementById('resultLine');
+
+    function sanitize(value) {
+      return value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    }
+
+    function renderResult(raw) {
+      const handle = sanitize(raw);
+      if (!handle) {
+        resultLine.innerHTML = '';
+        return;
+      }
+      const isTaken = takenHandles.has(handle);
+      if (isTaken) {
+        resultLine.innerHTML = `<span class="tag taken">taken</span><span style="color:var(--slate)">${handle}.cipherhost.xyz is already claimed</span>`;
+      } else {
+        resultLine.innerHTML = `<span class="tag available">available</span><span style="color:var(--slate)">${handle}.cipherhost.xyz is free — message us to claim it</span>`;
+      }
+    }
+
+    input.addEventListener('input', (e) => {
+      renderResult(e.target.value);
+    });
+
+    const staticCursorEl = document.getElementById('staticCursor');
+    input.addEventListener('focus', () => staticCursorEl.classList.add('hidden'));
+    input.addEventListener('blur', () => {
+      if (!input.value) staticCursorEl.classList.remove('hidden');
+    });
+
+    // ---------- Simulated live activity feed ----------
+    const candidateHandles = ['build', 'studio', 'launch', 'devs', 'forge', 'signal', 'core', 'pulse', 'labs', 'wave', 'node', 'stack', 'ledger', 'beacon', 'relay', 'grid', 'orbit', 'hatch', 'sprint', 'flux'];
+    const liveFeedText = document.getElementById('liveFeedText');
+    const zonefileList = document.getElementById('zonefileList');
+    const zonefileFoot = zonefileList.querySelector('.zonefile-foot');
+
+    function timeAgoLabel() {
+      const labels = ['just now', '1 min ago', '2 min ago', 'moments ago'];
+      return labels[Math.floor(Math.random() * labels.length)];
+    }
+
+    function claimRandomHandle() {
+      const available = candidateHandles.filter(h => !takenHandles.has(h));
+      if (available.length === 0) return;
+      const handle = available[Math.floor(Math.random() * available.length)];
+      takenHandles.add(handle);
+
+      // Update live feed line
+      liveFeedText.classList.add('fade-out');
+      setTimeout(() => {
+        liveFeedText.innerHTML = `<span class="handle">${handle}.cipherhost.xyz</span> was just claimed — ${timeAgoLabel()}`;
+        liveFeedText.classList.remove('fade-out');
+        liveFeedText.classList.add('fade-in');
+        setTimeout(() => liveFeedText.classList.remove('fade-in'), 300);
+      }, 250);
+
+      // Insert into registry list
+      const row = document.createElement('div');
+      row.className = 'zone-row just-claimed';
+      row.innerHTML = `<span class="zone-handle">${handle}<span class="suffix">.cipherhost.xyz</span></span><span class="zone-status taken">taken</span><span class="zone-note">${timeAgoLabel()}</span>`;
+      zonefileList.insertBefore(row, zonefileFoot);
+
+      // Re-render checker result if the user is currently looking at this handle
+      if (sanitize(input.value) === handle) renderResult(input.value);
+    }
+
+    // First claim appears shortly after load, then periodically
+    setTimeout(claimRandomHandle, 4000);
+    setInterval(claimRandomHandle, 13000);
+
+    // ---------- Boot sequence ----------
+    function typeLine(el, text, speed, callback) {
+      let i = 0;
+      el.classList.add('show');
+      const interval = setInterval(() => {
+        el.textContent = text.slice(0, i + 1);
+        i++;
+        if (i >= text.length) {
+          clearInterval(interval);
+          if (callback) callback();
+        }
+      }, speed);
+    }
+
+    function runBoot() {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const line1 = document.getElementById('bootLine1');
+      const line2 = document.getElementById('bootLine2');
+      const queryRow = document.getElementById('queryRow');
+      const staticCursor = document.getElementById('staticCursor');
+
+      if (reduceMotion) {
+        line1.textContent = 'resolving cipherhost.xyz...';
+        line1.classList.add('show');
+        line2.innerHTML = '<span class="ok">connected.</span>';
+        line2.classList.add('show');
+        queryRow.style.opacity = '1';
+        input.focus({ preventScroll: true });
+        return;
+      }
+
+      setTimeout(() => {
+        typeLine(line1, 'resolving cipherhost.xyz...', 28, () => {
+          setTimeout(() => {
+            line2.innerHTML = '';
+            line2.classList.add('show');
+            typeLine(line2, 'connected.', 35, () => {
+              line2.innerHTML = '<span class="ok">connected.</span>';
+              setTimeout(() => {
+                queryRow.style.transition = 'opacity 0.4s ease';
+                queryRow.style.opacity = '1';
+                input.focus({ preventScroll: true });
+              }, 200);
+            });
+          }, 250);
+        });
+      }, 300);
+    }
+
+    runBoot();
+
+    // ---------- Scroll reveal ----------
+    const revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      revealEls.forEach((el) => observer.observe(el));
+    } else {
+      revealEls.forEach((el) => el.classList.add('in'));
+    }
+  </script>
+
+</body>
+</html>
