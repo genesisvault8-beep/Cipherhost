@@ -228,6 +228,12 @@
     margin-top: 2px;
   }
   .service-card.bundle { border-color: var(--amber-dim); background: rgba(217,142,61,0.04); }
+  .service-disclaimer {
+    font-size: 12px;
+    color: var(--slate);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
   .service-card.bundle .badge {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
@@ -451,15 +457,24 @@
           </div>
           <div class="price">₦7,000<span class="alt">GH₵115 · $5 USDT</span></div>
         </div>
+        <div class="service-card">
+          <div>
+            <div class="name">Security check</div>
+            <div class="desc">Your site tested for real vulnerabilities — exposed keys, broken auth, common exploits. Done by someone who does this professionally on HackerOne and Intigriti.</div>
+          </div>
+          <div class="price">₦15,000<span class="alt">GH₵245 · $10 USDT</span></div>
+        </div>
         <div class="service-card bundle">
-          <span class="badge">all three</span>
+          <span class="badge">all four</span>
           <div>
             <div class="name">Complete setup</div>
-            <div class="desc">DNS + PWA + Search Console, done together</div>
+            <div class="desc">DNS + PWA + Search Console + Security check, done together</div>
           </div>
-          <div class="price">₦20,000<span class="alt">GH₵330 · $15 USDT</span></div>
+          <div class="price">₦32,000<span class="alt">GH₵525 · $22 USDT</span></div>
         </div>
       </div>
+
+      <p class="service-disclaimer">Security check is a focused review for common, real-world issues — not a full penetration test, and it doesn't guarantee every vulnerability will be found. For sites handling sensitive data or payments, treat this as a first pass, not a complete audit.</p>
 
       <div class="path-grid">
         <div class="path-card primary">
